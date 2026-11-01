@@ -142,3 +142,15 @@ final class AgentFilesTests: XCTestCase {
         XCTAssertEqual(files.relative(URL(fileURLWithPath: "/elsewhere/x")), "/elsewhere/x")
     }
 }
+
+/// A Loom-layout app's Shared folder holds only App.swift and AppDelegate.swift loose.
+final class LayoutFolderTests: XCTestCase {
+    func testPointedAtSharedItselfTheTypesGoInSharedModels() throws {
+        let folder = try Fixture.folder()
+        try FileManager.default.createDirectory(at: folder.appendingPathComponent("Components"), withIntermediateDirectories: true)
+        let input = ModelsAgent.Input(entities: ["Item: id String"], into: "Shared", directory: folder.path)
+        let result = try ModelsAgent.write(input, note: { _ in }, yield: { _ in })
+        XCTAssertEqual(result.paths, [folder.appendingPathComponent("Shared/Models/Item.swift").path])
+        XCTAssertTrue(result.notes.first?.contains("Shared/Models") ?? false, "\(result.notes)")
+    }
+}

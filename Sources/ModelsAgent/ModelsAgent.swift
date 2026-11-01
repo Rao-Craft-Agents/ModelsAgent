@@ -113,7 +113,7 @@ public struct ModelsAgent: GraniteAgentPackage {
         yield(.read(types: entities.count, unify: unifies.count))
 
         let files = AgentFiles(directory: input.directory)
-        let folder = files.resolve(input.into ?? "Shared/Models")
+        let (folder, layoutNote) = files.ownFolder(files.resolve(input.into ?? "Shared/Models"), own: "Models")
         note("writing \(entities.count) type\(entities.count == 1 ? "" : "s") into \(files.relative(folder))")
 
         var emitter = ModelsEmitter()
@@ -126,7 +126,7 @@ public struct ModelsAgent: GraniteAgentPackage {
         emitter.resolvePreviews()
 
         var planned: [(url: URL, text: String)] = []
-        var previews: [String] = [], notes: [String] = []
+        var previews: [String] = [], notes: [String] = [layoutNote].compactMap { $0 }
         for entity in entities {
             let emitted = emitter.emit(entity)
             planned.append((folder.appendingPathComponent("\(entity.name).swift"), emitted.text))
