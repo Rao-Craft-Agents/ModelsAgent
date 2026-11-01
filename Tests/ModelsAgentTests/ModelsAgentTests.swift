@@ -53,3 +53,14 @@ final class ModelsAgentTests: XCTestCase {
         XCTAssertTrue(result.notes.isEmpty, "\(result.notes)")
     }
 }
+
+/// A host that names its folder only in `AgentHost`, as one calling over the wire may.
+final class HostFolderTests: XCTestCase {
+    func testTheHostsFolderIsUsedWhenTheInputHasNone() async throws {
+        let folder = try Fixture.folder()
+        let input = try JSONSerialization.data(withJSONObject: ["entities": ["Item: id String"]])
+        let answer = try await AnyAgentPackage(ModelsAgent.self).perform(input, host: AgentHost(directory: folder.path))
+        let result = try JSONDecoder().decode(ModelsResult.self, from: answer)
+        XCTAssertEqual(result.paths, [folder.appendingPathComponent("Shared/Models/Item.swift").path])
+    }
+}

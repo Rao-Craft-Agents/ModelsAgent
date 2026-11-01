@@ -78,6 +78,9 @@ public struct ModelsAgent: GraniteAgentPackage {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
+                    // The folder is the input's, else the host's: a host calling over the wire may say it only there.
+                    var input = input
+                    if input.directory == nil { input.directory = context.host.directory }
                     let result = try Self.write(input, note: context.host.note) { continuation.yield($0) }
                     continuation.yield(.written(result))
                     continuation.finish()
