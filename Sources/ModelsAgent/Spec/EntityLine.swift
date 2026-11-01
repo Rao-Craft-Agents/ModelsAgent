@@ -120,6 +120,14 @@ enum EntityLine {
             }
         }
         text = text.trimmingCharacters(in: CharacterSet(charactersIn: "`"))
+        // An API's own spelling (`Hot`, `TopDay`, `NSFW`) is a case named in Swift's spelling that keeps the API's as its
+        // raw value: `case topDay = "TopDay"`. Nothing else could be meant, so it is not refused.
+        if values.isEmpty, text.range(of: #"^[A-Z][A-Za-z0-9_]*$"#, options: .regularExpression) != nil {
+            if raw == nil { raw = "\"\(text)\"" }
+            text = SwiftName.lowerCamel(text)
+        } else if !values.isEmpty, text.first?.isUppercase == true {
+            text = SwiftName.lowerCamel(text)
+        }
         guard SwiftName.isMemberName(text) else { throw ModelsError.line(line, "`\(text)` is not a case name (lowerCamelCase)") }
         if raw != nil, !values.isEmpty { throw ModelsError.line(line, "case `\(text)` carries values and a raw value; an enum has one or the other") }
         return Case(name: text, values: values, raw: raw, doc: doc)

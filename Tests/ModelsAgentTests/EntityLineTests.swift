@@ -54,3 +54,16 @@ final class EntityLineTests: XCTestCase {
         XCTAssertEqual(unify.assignments.map(\.expression), ["String(post.id)", "source.post.name", #"post.body ?? """#])
     }
 }
+
+/// An API's own enum spelling, read as Swift's with the API's kept as the raw value.
+final class APISpellingTests: XCTestCase {
+    func testCapitalizedCasesKeepTheirSpellingAsTheRawValue() throws {
+        let sort = try EntityLine.parse("SortType: Active | Hot | TopDay | NSFW | new")
+        XCTAssertEqual(sort.cases.map(\.name), ["active", "hot", "topDay", "nsfw", "new"])
+        XCTAssertEqual(sort.cases.map(\.raw), ["\"Active\"", "\"Hot\"", "\"TopDay\"", "\"NSFW\"", nil])
+        let text = ModelsEmitter().emit(sort).text
+        XCTAssertTrue(text.contains("case topDay = \"TopDay\""), text)
+        XCTAssertTrue(text.contains("case new\n"), text)
+        XCTAssertEqual(SwiftName.lowerCamel("URLPath"), "urlPath")
+    }
+}

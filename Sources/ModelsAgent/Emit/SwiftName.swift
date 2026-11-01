@@ -36,4 +36,15 @@ enum SwiftName {
 
     /// `displayName` → `display_name`.
     static func snake(_ name: String) -> String { words(name).replacingOccurrences(of: " ", with: "_") }
+
+    /// `TopDay` → `topDay`, `NSFW` → `nsfw`, `URLPath` → `urlPath`: a type-like name said as a member.
+    static func lowerCamel(_ name: String) -> String {
+        let characters = Array(name)
+        var upper = 0
+        while upper < characters.count, characters[upper].isUppercase { upper += 1 }
+        if upper == 0 { return name }
+        // A run of capitals is an acronym: all of it lowercased, except the capital that starts the next word.
+        let cut = upper == characters.count || upper == 1 ? upper : upper - 1
+        return String(characters[..<cut]).lowercased() + String(characters[cut...])
+    }
 }
