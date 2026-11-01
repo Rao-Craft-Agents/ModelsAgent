@@ -47,4 +47,13 @@ enum SwiftName {
         let cut = upper == characters.count || upper == 1 ? upper : upper - 1
         return String(characters[..<cut]).lowercased() + String(characters[cut...])
     }
+
+    /// `comment_count` → `commentCount`, `post_id` → `postID`, `avatar_url` → `avatarURL`: a snake_case name said in
+    /// Swift's spelling, acronyms in capitals as Swift's API guidelines write them.
+    static func camel(_ name: String) -> String {
+        let acronyms: Set<String> = ["id", "url", "uri", "html", "json", "api", "uuid", "ip", "http", "https", "pdf"]
+        let parts = name.split(separator: "_").map(String.init).filter { !$0.isEmpty }
+        guard let first = parts.first else { return name }
+        return first.lowercased() + parts.dropFirst().map { acronyms.contains($0.lowercased()) ? $0.uppercased() : $0.prefix(1).uppercased() + $0.dropFirst() }.joined()
+    }
 }

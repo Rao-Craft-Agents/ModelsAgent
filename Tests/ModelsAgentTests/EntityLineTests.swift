@@ -67,3 +67,17 @@ final class APISpellingTests: XCTestCase {
         XCTAssertEqual(SwiftName.lowerCamel("URLPath"), "urlPath")
     }
 }
+
+/// snake_case, as an API writes it, said in Swift's spelling with the API's kept as the key.
+final class SnakeCaseTests: XCTestCase {
+    func testSnakeCaseFieldsAreCamelCasedAndKeyedAsWritten() throws {
+        let entity = try EntityLine.parse("Post: id Int, comment_count Int = 0, created_at Date, post_id Int?, avatar_url URL?, title String")
+        XCTAssertEqual(entity.fields.map(\.name), ["id", "commentCount", "createdAt", "postID", "avatarURL", "title"])
+        XCTAssertEqual(entity.fields.map(\.key), [nil, "comment_count", "created_at", "post_id", "avatar_url", nil])
+        let text = ModelsEmitter().emit(entity).text
+        XCTAssertTrue(text.contains("case commentCount = \"comment_count\""), text)
+        let sort = try EntityLine.parse("Sort: hot | top_day | new")
+        XCTAssertEqual(sort.cases.map(\.name), ["hot", "topDay", "new"])
+        XCTAssertEqual(sort.cases.map(\.raw), [nil, "\"top_day\"", nil])
+    }
+}
