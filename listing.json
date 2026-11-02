@@ -1,9 +1,0 @@
-{
-  "name": "Models",
-  "tagline": "An app's own domain types, from one compact line a type.",
-  "category": "developer",
-  "keywords": ["swift", "models", "codable", "types", "previews", "granite", "loom"],
-  "platforms": ["macOS 14"],
-  "license": "MIT",
-  "description": "An app's own domain types, written as Swift from one compact line a type. Say `Recipe \"a dish\": id String, title String, minutes Int = 30, author Cook?, steps [Step]` and `Course: starter | main | dessert`; Models writes a file a type into the folder the call names, each one Codable, Hashable and Sendable, Identifiable when it has an id, with an explicit initializer and a `preview` value for SwiftUI previews and tests.\n\nA field with a default decodes as its default when the JSON leaves it out, so a persisted store keeps reading after a field is added. A `unify` line makes one type from another API's: `FederatedPost from LemmyPost: id = String(post.id), title = post.name`.\n\nNo model is asked: the same lines make the same files every time. A line it cannot read is refused with the reason, every bad line at once, and nothing is written until every file parses.\n\nOne of the Rao Craft Agents: independent packages that, tagged in prompts along the life of a project, build an app of Loom's quality."
-}
