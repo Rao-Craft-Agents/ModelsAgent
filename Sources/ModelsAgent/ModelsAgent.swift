@@ -93,6 +93,40 @@ public struct ModelsAgent: GraniteAgentPackage {
     }
 
     /// The whole call: the lines read, the files made, staged, checked and written.
+    /// Why a type would hold itself in place: a struct cannot (Margin, 2026-11-01: `parent Comment?` in Comment did not
+    /// build, and the model rewrote it as a class that could not conform). An optional holds its value in place; a list
+    /// or a dictionary holds it elsewhere and breaks the loop.
+    static func loops(in entities: [Entity]) -> [String] {
+        let byName = Dictionary(entities.map { ($0.name, $0) }, uniquingKeysWith: { first, _ in first })
+        func inPlace(_ type: TypeRef) -> String? {
+            switch type {
+            case .named(let name): return byName[name] == nil ? nil : name
+            case .optional(let wrapped): return inPlace(wrapped)
+            case .array, .dictionary: return nil
+            }
+        }
+        var reasons: [String] = [], reported: Set<String> = []
+        for entity in entities where !entity.isEnum && !reported.contains(entity.name) {
+            var stack: [(String, [String])] = [(entity.name, [])]
+            var visited: Set<String> = []
+            search: while let (current, trail) = stack.popLast() {
+                for field in byName[current]?.fields ?? [] {
+                    guard let next = inPlace(field.type) else { continue }
+                    let path = trail + ["\(current).\(field.name)"]
+                    if next == entity.name {
+                        let first = path[0].split(separator: ".").last.map(String.init) ?? ""
+                        reasons.append("`\(entity.name)` holds a `\(entity.name)` in place (\(path.map { "`\($0)`" }.joined(separator: " → "))), which a struct cannot: "
+                                       + "hold its id instead (`\(first)ID String?`) or a list (`[\(next)]`)")
+                        reported.formUnion([entity.name])
+                        break search
+                    }
+                    if byName[next]?.isEnum == false, visited.insert(next).inserted { stack.append((next, path)) }
+                }
+            }
+        }
+        return reasons
+    }
+
     static func write(_ input: Input, note: @Sendable (String) -> Void, yield: (ModelsFrame) -> Void) throws -> ModelsResult {
         let entityLines = (input.entities ?? []).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
         let unifyLines = (input.unify ?? []).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
@@ -109,6 +143,7 @@ public struct ModelsAgent: GraniteAgentPackage {
         }
         var seen: Set<String> = []
         for entity in entities where !seen.insert(entity.name).inserted { reasons.append("`\(entity.name)` is written twice in one call") }
+        reasons += Self.loops(in: entities)
         guard reasons.isEmpty else { throw ModelsError.lines(reasons) }
         yield(.read(types: entities.count, unify: unifies.count))
 

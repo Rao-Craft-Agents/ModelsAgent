@@ -64,3 +64,15 @@ final class HostFolderTests: XCTestCase {
         XCTAssertEqual(result.paths, [folder.appendingPathComponent("Shared/Models/Item.swift").path])
     }
 }
+
+/// A struct cannot hold itself in place, directly or through another type (Margin, 2026-11-01).
+final class LoopTests: XCTestCase {
+    func testATypeHoldingItselfInPlaceIsRefusedAndAListIsNot() throws {
+        let entities = try ["Comment: id String, parent Comment?, replies [Comment]", "Post: id String, author User?", "User: id String, pinned Post?",
+                            "Reader: id String, friends [Reader]"].map(EntityLine.parse)
+        let reasons = ModelsAgent.loops(in: entities)
+        XCTAssertTrue(reasons.contains { $0.contains("`Comment` holds a `Comment` in place (`Comment.parent`)") && $0.contains("`parentID String?`") }, "\(reasons)")
+        XCTAssertTrue(reasons.contains { $0.contains("`Post` holds a `Post` in place (`Post.author` → `User.pinned`)") }, "\(reasons)")
+        XCTAssertFalse(reasons.contains { $0.contains("`Reader`") }, "a list holds its elements elsewhere")
+    }
+}
