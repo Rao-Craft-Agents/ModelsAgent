@@ -1,7 +1,8 @@
 import Foundation
+import GraniteAgents
 
 /// What a call answers: the files written, as absolute paths, and what they hold.
-public struct ModelsResult: Codable, Sendable, Equatable {
+public struct ModelsResult: AgentAnswer, Equatable {
     /// The first file written.
     public var path: String?
     /// Every file written: one a type, one a unify line.
